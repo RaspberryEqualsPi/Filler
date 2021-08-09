@@ -21,6 +21,7 @@ bool lost = false;
 bool won = true;
 bool ghostWon = false;
 int ghostLevel;
+sf::Vector2i startingpos;
 sf::Texture wstex;
 sf::Sprite winscreen;
 sf::Texture ltex;
@@ -80,6 +81,7 @@ void loadlevel(std::string filename) {
     }
     Document level;
     level.Parse(json.c_str());
+    startingpos = { level["StartingX"].GetInt(), level["StartingY"].GetInt() };
     player = Player(level["StartingX"].GetInt(), level["StartingY"].GetInt());
     if (level.HasMember("Tokens")) {
         for (size_t i = 0; i < level["Tokens"].Size(); i++) {
@@ -386,7 +388,6 @@ int singlePlayerMain()
             if (Checkpoints[i].x == player.x && Checkpoints[i].y == player.y) {
                 Checkpoints[i].timestouched++;
                 if (Checkpoints[i].timestouched <= 1) {
-                    std::cout << Checkpoints[i].timestouched << std::endl;
                     for (int i1 = 0; i1 < Checkpoints.size(); i1++) {
                         if (i1 != i) {
                             Checkpoints[i1].timestouched = 0;
@@ -536,9 +537,29 @@ std::vector<GhostData> reloadGhostData() {
     }
     return ghostdata;
 }
-void saveGhostData(std::vector<GhostData> gd) {
+void saveGhostData(std::vector<GhostData> *gd) {
     std::string filename = lastfilename;
-    // add actual saving stuff here
+    std::string leveldata = R"("level": )";
+    leveldata = leveldata + to_string(ghostLevel) + ",";
+    std::string result = "{";
+    std::string data = R"("data":[)";
+    data = data + R"({"pX": )" + to_string(startingpos.x) + R"(, "pY": )" + to_string(startingpos.y) + R"(, "time": 0},)";
+    for (int i = 0; i < gd->size(); i++) {
+        std::string arraything = "{";
+        arraything = arraything + R"("pX": )" + std::to_string((*gd)[i].pPos.x) + ",";
+        arraything = arraything + R"("pY": )" + std::to_string((*gd)[i].pPos.y) + ",";
+        arraything = arraything + R"("time": )" + std::to_string((*gd)[i].time) + "}";
+        if (i < gd->size() - 1)
+            arraything = arraything + ",";
+        data = data + arraything;
+    }
+    data = data + "]";
+    result = result + leveldata + data + "}";
+    ofstream resultf;
+    resultf.open(filename);
+    std::cout << result;
+    resultf << result;
+    resultf.close();
 }
 std::vector<GhostData> loadGhostData(){
     char filename[MAX_PATH];
@@ -601,6 +622,7 @@ std::vector<GhostData> loadGhostData(){
 }
 int ghostMain()
 {
+    bool elegibleToMove = false;
     sf::View mainView({ 160.f, 160.f }, { 320.f, 320.f });
     sf::View ghostView({ 480.f, 160.f }, { 320.f, 320.f });
     mainView.setViewport(sf::FloatRect(0.f, 0.f, 0.5f, 1.f));
@@ -680,13 +702,9 @@ int ghostMain()
             if (event.type == sf::Event::MouseButtonReleased)
                 FillerUI::SetClicking(true);
             if (event.type == sf::Event::KeyPressed) {
-                if (!lost && !won) {
-                    if (event.key.code == sf::Keyboard::E && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                if (!lost && !won && !ghostWon) {
+                    elegibleToMove = true;
+                    if (event.key.code == sf::Keyboard::E && appInFocus(&window) && elegibleToMove) {
                         sf::Vector2 lastpos = { player.x, player.y };
                         player.y--;
                         player.x++;
@@ -705,14 +723,9 @@ int ghostMain()
                             player.y = lastpos.y;
                             player.x = lastpos.x;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::D && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::D && appInFocus(&window) && elegibleToMove) {
                         sf::Vector2 lastpos = { player.x, player.y };
                         player.y++;
                         player.x++;
@@ -731,14 +744,9 @@ int ghostMain()
                             player.y = lastpos.y;
                             player.x = lastpos.x;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::W && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::W && appInFocus(&window) && elegibleToMove) {
                         sf::Vector2 lastpos = { player.x, player.y };
                         player.y--;
                         player.x--;
@@ -757,14 +765,9 @@ int ghostMain()
                             player.y = lastpos.y;
                             player.x = lastpos.x;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::S && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::S && appInFocus(&window) && elegibleToMove) {
                         sf::Vector2 lastpos = { player.x, player.y };
                         player.y++;
                         player.x--;
@@ -783,14 +786,9 @@ int ghostMain()
                             player.y = lastpos.y;
                             player.x = lastpos.x;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::Key::Down && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::Key::Down && appInFocus(&window) && elegibleToMove) {
                         int lastpos = player.y;
                         bool touched = false;
                         player.y++;
@@ -807,14 +805,9 @@ int ghostMain()
                         if (!touched) {
                             player.y = lastpos;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::Key::Up && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::Key::Up && appInFocus(&window) && elegibleToMove) {
                         int lastpos = player.y;
                         bool touched = false;
                         player.y--;
@@ -831,14 +824,9 @@ int ghostMain()
                         if (!touched) {
                             player.y = lastpos;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::Key::Left && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::Key::Left && appInFocus(&window) && elegibleToMove) {
                         int lastpos = player.x;
                         bool touched = false;
                         player.x--;
@@ -855,14 +843,9 @@ int ghostMain()
                         if (!touched) {
                             player.x = lastpos;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
-                    if (event.key.code == sf::Keyboard::Key::Right && appInFocus(&window)) {
-                        GhostData newgd;
-                        newgd.pPos.x = player.x;
-                        newgd.pPos.y = player.y;
-                        newgd.time = timer.elapsedMilliseconds();
-                        savedata.push_back(newgd);
+                    if (event.key.code == sf::Keyboard::Key::Right && appInFocus(&window) && elegibleToMove) {
                         int lastpos = player.x;
                         bool touched = false;
                         player.x++;
@@ -879,8 +862,16 @@ int ghostMain()
                         if (!touched) {
                             player.x = lastpos;
                         }
-                        break;
+                        elegibleToMove = false;
                     }
+                }
+                if ((event.key.code == sf::Keyboard::E || event.key.code == sf::Keyboard::S || event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::W || event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::Right)){// && appInFocus(&window)) {
+                    std::cout << "event received" << std::endl;
+                    GhostData newgd;
+                    newgd.pPos.x = player.x;
+                    newgd.pPos.y = player.y;
+                    newgd.time = timer.elapsedMilliseconds();
+                    savedata.push_back(newgd);
                 }
             }
         }
@@ -925,7 +916,6 @@ int ghostMain()
             if (Checkpoints[i].x == player.x && Checkpoints[i].y == player.y) {
                 Checkpoints[i].timestouched++;
                 if (Checkpoints[i].timestouched <= 1) {
-                    std::cout << Checkpoints[i].timestouched << std::endl;
                     for (int i1 = 0; i1 < Checkpoints.size(); i1++) {
                         if (i1 != i) {
                             Checkpoints[i1].timestouched = 0;
@@ -960,10 +950,12 @@ int ghostMain()
             if (exitB.clicked(&window))
                 return 0;
             if (nextLvlB.clicked(&window) && nextlevel) {
-                saveGhostData(savedata);
+                saveGhostData(&savedata);
             }
         }
         if (lost || ghostWon) {
+            savedata.resize(0);
+            savedata = {};
             exitB.rect.setPosition(320 - 16 - exitB.sizeX, 200);
             window.draw(losescreen);
             for (int i = 0; i < ArrowShooters.size(); i++) {
@@ -1060,11 +1052,14 @@ int ghostMain()
         ghostWon = true;
         for (int i = 0; i < ghostdata.size(); i++) {
             //std::cout << i << ": pX: " << ghostdata[i].pPos.x << ", time: " << ghostdata[i].time << std::endl;
-            std::cout << ghostdata[i + (ghostdata.size() > i)].time << std::endl;
-            if (timer.elapsedMilliseconds() >= ghostdata[i].time && timer.elapsedMilliseconds() <= ghostdata[i + (ghostdata.size() > i)].time) {
-                std::cout << "hit" << std::endl;
+            if (timer.elapsedMilliseconds() >= ghostdata[i].time && timer.elapsedMilliseconds() <= ghostdata[i + (ghostdata.size() > i)].time && !won && !lost) {
                 hit = true;
                 ghostPlayer = Player(ghostdata[i].pPos.x + 320/16, ghostdata[i].pPos.y);
+            }
+            if ((ghostdata.size() == i) && timer.elapsedMilliseconds() >= ghostdata[i].time) {
+                std::cout << "hello there" << std::endl;
+                hit = true;
+                ghostPlayer = Player(ghostdata[i].pPos.x + 320 / 16, ghostdata[i].pPos.y);
             }
         }
         if (timer.elapsedMilliseconds() < ghostdata[1].time) {
