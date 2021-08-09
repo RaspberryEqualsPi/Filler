@@ -1,4 +1,4 @@
-﻿// if you're having issues with git, remember: commit all, then push
+﻿// if you're having issues with git, remember: commit all, then push, it works every time
 #include <map>
 #include <fstream>
 #include <iostream>
