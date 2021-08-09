@@ -1,4 +1,5 @@
-﻿#include <map>
+﻿// if you're having issues with git, remember: push then sync then commit all
+#include <map>
 #include <fstream>
 #include <iostream>
 #include "buttonHover.h"
@@ -538,7 +539,6 @@ std::vector<GhostData> reloadGhostData() {
 void saveGhostData(std::vector<GhostData> gd) {
     std::string filename = lastfilename;
     // add actual saving stuff here
-    // added this comment so i could test git pushing   
 }
 std::vector<GhostData> loadGhostData(){
     char filename[MAX_PATH];
