@@ -538,7 +538,7 @@ std::vector<GhostData> reloadGhostData() {
 void saveGhostData(std::vector<GhostData> gd) {
     std::string filename = lastfilename;
     // add actual saving stuff here
-    // added this comment so i could test git pushing  
+    // added this comment so i could test git pushing   
 }
 std::vector<GhostData> loadGhostData(){
     char filename[MAX_PATH];
