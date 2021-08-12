@@ -1,4 +1,5 @@
 ﻿// if you're having issues with git, remember: commit all, then push, it works every time
+// TODO: make create ghost button create empty ghost
 #include <map>
 #include <fstream>
 #include <iostream>
