@@ -1270,6 +1270,7 @@ int mainMenu() {
         FillerUI::SetClicking(false);
         window.display();
     }
+    return 0;
 }
 int main() {
     mainMenu();
