@@ -1,10 +1,12 @@
 ﻿#include <map>
 #include <string>
+#include <vector>
 #include "ArrowPNG.h"
 #include <SFML/Window.hpp>
 #include "ArrowShooterPNG.h"
 #include <SFML/Graphics.hpp>
 int level = 1;
+int ghostLevel = 1;
 namespace ObjectEnums {
 	namespace ArrowShooter {
 		int left = 0;
@@ -111,6 +113,8 @@ struct ArrowShooter {
 		Sarrowshooter.setRotation(type * 90);
 		arrow.Sarrow.setOrigin(0, 0);
 		arrow.Sarrow.setRotation(type * 90 - 90);
+		if (ghostLevel != 1)
+			level = ghostLevel;
 		if (!stop) {
 			if (type == ObjectEnums::ArrowShooter::up) {
 				arrow.y -= 0.2 * (level - (level / 1.2));

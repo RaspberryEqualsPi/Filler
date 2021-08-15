@@ -21,7 +21,6 @@ bool left1;
 bool lost = false;
 bool won = true;
 bool ghostWon = false;
-int ghostLevel;
 sf::Vector2i startingpos;
 sf::Texture wstex;
 sf::Sprite winscreen;
@@ -955,8 +954,6 @@ int ghostMain()
             }
         }
         if (lost || ghostWon) {
-            savedata.resize(0);
-            savedata = {};
             exitB.rect.setPosition(320 - 16 - exitB.sizeX, 200);
             window.draw(losescreen);
             for (int i = 0; i < ArrowShooters.size(); i++) {
@@ -972,7 +969,13 @@ int ghostMain()
             if (exitB.clicked(&window))
                 return 0;
             if (retryB.clicked(&window)) {
-                if (level == LastTokenStateLevel) {
+                bool touched = false;
+                for (int i = 0; i < Checkpoints.size(); i++) {
+                    if (Checkpoints[i].timestouched > 0) {
+                        touched = true;
+                    }
+                }
+                if (touched) {
                     tokens = LastTokenState;
                     player = *lastPlayerState;
                     lost = false;
@@ -1003,22 +1006,13 @@ int ghostMain()
                             ArrowShooters.insert({ i, Arrowshooter });
                         }
                     }
-                    for(int i = 0; i< gTokens.size(); i++){
-                        gTokens[i].tokencolor = sf::Color::Yellow;
-                        gTokens[i].timestouched = 0;
-                    }
-                    ghostdata = reloadGhostData();
-                    timer.stop();
-                    timer.start();
                 }
-                else {
-                    LastTokenState = {};
-                    lastPlayerState = nullptr;
-                }
-                if (lastPlayerState == nullptr) {
+                if (!touched) {
                     tokens = {};
                     ArrowShooters = {};
                     Checkpoints = {};
+                    savedata.resize(0);
+                    savedata = {};
                     loadlevel("data/levels/level" + to_string(level) + ".json");
                     for (int i = 0; i < gTokens.size(); i++) {
                         gTokens[i].tokencolor = sf::Color::Yellow;
@@ -1105,7 +1099,100 @@ int ghostMain()
     return 0;
 }
 int mainMenu();
+int ghostMenu();
+void eraseSubStr(std::string & mainStr, const std::string & toErase)
+{
+    size_t pos = mainStr.find(toErase);
+    if (pos != std::string::npos)
+    {
+        mainStr.erase(pos, toErase.length());
+    }
+}
+int createGhost() {
+    if (!SetCurrentDirectoryA((getexepath() + "\\data\\ghostData").c_str())) { printf("SetCurrentDirectory failed (%d)\n", GetLastError()); }
+    char filename[MAX_PATH];
+    OPENFILENAME ofn;
+    ZeroMemory(&filename, sizeof(filename));
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = window.getSystemHandle();
+    ofn.lpstrFilter = "Ghost Files\0*.ghost\0Any File\0*.*\0";
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrTitle = "Open Ghost File";
+    ofn.Flags = OFN_DONTADDTORECENT;
+
+    if (!GetOpenFileNameA(&ofn)) {
+        switch (CommDlgExtendedError())
+        {
+        case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE\n";   break;
+        case CDERR_FINDRESFAILURE: std::cout << "CDERR_FINDRESFAILURE\n";  break;
+        case CDERR_INITIALIZATION: std::cout << "CDERR_INITIALIZATION\n";  break;
+        case CDERR_LOADRESFAILURE: std::cout << "CDERR_LOADRESFAILURE\n";  break;
+        case CDERR_LOADSTRFAILURE: std::cout << "CDERR_LOADSTRFAILURE\n";  break;
+        case CDERR_LOCKRESFAILURE: std::cout << "CDERR_LOCKRESFAILURE\n";  break;
+        case CDERR_MEMALLOCFAILURE: std::cout << "CDERR_MEMALLOCFAILURE\n"; break;
+        case CDERR_MEMLOCKFAILURE: std::cout << "CDERR_MEMLOCKFAILURE\n";  break;
+        case CDERR_NOHINSTANCE: std::cout << "CDERR_NOHINSTANCE\n";     break;
+        case CDERR_NOHOOK: std::cout << "CDERR_NOHOOK\n";          break;
+        case CDERR_NOTEMPLATE: std::cout << "CDERR_NOTEMPLATE\n";      break;
+        case CDERR_STRUCTSIZE: std::cout << "CDERR_STRUCTSIZE\n";      break;
+        case FNERR_BUFFERTOOSMALL: std::cout << "FNERR_BUFFERTOOSMALL\n";  break;
+        case FNERR_INVALIDFILENAME: std::cout << "FNERR_INVALIDFILENAME\n"; break;
+        case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE\n"; break;
+        default: std::cout << "You cancelled.\n";
+        }
+    }
+    if (!SetCurrentDirectoryA((getexepath() + "\\data\\levels").c_str())) { printf("SetCurrentDirectory failed (%d)\n", GetLastError()); }
+    char filename1[MAX_PATH];
+    OPENFILENAME ofn1;
+    ZeroMemory(&filename1, sizeof(filename1));
+    ZeroMemory(&ofn1, sizeof(ofn1));
+    ofn1.lStructSize = sizeof(ofn1);
+    ofn1.hwndOwner = window.getSystemHandle();
+    ofn1.lpstrFilter = "Level Files\0*.json\0Any File\0*.*\0";
+    ofn1.lpstrFile = filename1;
+    ofn1.nMaxFile = MAX_PATH;
+    ofn1.lpstrTitle = "Open Level File";
+    ofn1.Flags = OFN_DONTADDTORECENT;
+
+    if (!GetOpenFileNameA(&ofn1)) {
+        switch (CommDlgExtendedError())
+        {
+        case CDERR_DIALOGFAILURE: std::cout << "CDERR_DIALOGFAILURE\n";   break;
+        case CDERR_FINDRESFAILURE: std::cout << "CDERR_FINDRESFAILURE\n";  break;
+        case CDERR_INITIALIZATION: std::cout << "CDERR_INITIALIZATION\n";  break;
+        case CDERR_LOADRESFAILURE: std::cout << "CDERR_LOADRESFAILURE\n";  break;
+        case CDERR_LOADSTRFAILURE: std::cout << "CDERR_LOADSTRFAILURE\n";  break;
+        case CDERR_LOCKRESFAILURE: std::cout << "CDERR_LOCKRESFAILURE\n";  break;
+        case CDERR_MEMALLOCFAILURE: std::cout << "CDERR_MEMALLOCFAILURE\n"; break;
+        case CDERR_MEMLOCKFAILURE: std::cout << "CDERR_MEMLOCKFAILURE\n";  break;
+        case CDERR_NOHINSTANCE: std::cout << "CDERR_NOHINSTANCE\n";     break;
+        case CDERR_NOHOOK: std::cout << "CDERR_NOHOOK\n";          break;
+        case CDERR_NOTEMPLATE: std::cout << "CDERR_NOTEMPLATE\n";      break;
+        case CDERR_STRUCTSIZE: std::cout << "CDERR_STRUCTSIZE\n";      break;
+        case FNERR_BUFFERTOOSMALL: std::cout << "FNERR_BUFFERTOOSMALL\n";  break;
+        case FNERR_INVALIDFILENAME: std::cout << "FNERR_INVALIDFILENAME\n"; break;
+        case FNERR_SUBCLASSFAILURE: std::cout << "FNERR_SUBCLASSFAILURE\n"; break;
+        default: std::cout << "You cancelled.\n";
+        }
+    }
+    std::cout << filename1 << std::endl;
+    std::string level = filename1;
+    std::cout << level << std::endl;
+    std::string afterLevel = level.substr(level.find_last_of("level") + 1);
+    eraseSubStr(afterLevel, ".json");
+    ofstream fs;
+    fs.open(filename);
+    fs << R"({"level": )" << afterLevel << R"(, "data":[{"pX": 0, "pY": 0, "time": 0}, {"pX": 0, "pY": 0, "time": 0}]})";
+    fs.close();
+    std::cout << R"({"level": )" << afterLevel << R"(, "data":[{"pX": 0, "pY": 0, "time": 0}, {"pX": 0, "pY": 0, "time": 0}]})" << std::endl;
+    std::cout << "created an empty ghost on level " << afterLevel << std::endl;
+    if (!SetCurrentDirectoryA(getexepath().c_str())) { printf("SetCurrentDirectory failed (%d)\n", GetLastError()); }
+    ghostMenu();
+}
 int ghostMenu() {
+    FillerUI::SetClicking(false);
     sf::SoundBuffer hoverBuffer;
     hoverBuffer.loadFromMemory(buttonHover, buttonHover_length);
     sf::Sound hoverSound;
@@ -1181,10 +1268,10 @@ int ghostMenu() {
             ghostMain();
             break;
         }
-        //if (createB.clicked(&window)) {
-            //ghostMenu();
-            //break;
-        //}
+        if (createB.clicked(&window)) {
+            createGhost();
+            break;
+        }
         if (backB.clicked(&window)) {
             mainMenu();
             break;
