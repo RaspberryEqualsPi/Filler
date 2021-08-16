@@ -954,6 +954,7 @@ int ghostMain()
             }
         }
         if (lost || ghostWon) {
+            timer.pause();
             exitB.rect.setPosition(320 - 16 - exitB.sizeX, 200);
             window.draw(losescreen);
             for (int i = 0; i < ArrowShooters.size(); i++) {
@@ -979,6 +980,7 @@ int ghostMain()
                     tokens = LastTokenState;
                     player = *lastPlayerState;
                     lost = false;
+                    timer.pause();
                     for (int i = 0; i < ArrowShooters.size(); i++) {
                         ArrowShooters[i].stop = false;
                     }
@@ -1006,6 +1008,7 @@ int ghostMain()
                             ArrowShooters.insert({ i, Arrowshooter });
                         }
                     }
+                    timer.resume();
                 }
                 if (!touched) {
                     tokens = {};
@@ -1019,8 +1022,7 @@ int ghostMain()
                         gTokens[i].timestouched = 0;
                     }
                     ghostdata = reloadGhostData();
-                    timer.stop();
-                    timer.start();
+                    timer.reset();
                     lost = false;
                 }
             }
@@ -1034,8 +1036,7 @@ int ghostMain()
                     gTokens[i].timestouched = 0;
                 }
                 ghostdata = reloadGhostData();
-                timer.stop();
-                timer.start();
+                timer.reset();
                 lost = false;
                 lastPlayerState = nullptr;
                 LastTokenState = {};
