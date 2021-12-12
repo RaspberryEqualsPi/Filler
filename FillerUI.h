@@ -6,21 +6,18 @@
 #include <SFML/Graphics.hpp>
 #include <windows.h>
 #include "RoundedRectangle.h"
-bool appInFocus(sf::RenderWindow* app)
+bool appInFocus(sf::RenderWindow* app) // credits to someone on the sfml forums (forgot their username)
 {
 	if (app == NULL)
 		return false;
-
 	HWND handle = app->getSystemHandle();
 	bool one = handle == GetFocus();
 	bool two = handle == GetForegroundWindow();
-
-	if (one != two) //strange 'half-focus': window is in front but you can't click anything - so we fix it
+	if (one != two)
 	{
 		SetFocus(handle);
 		SetForegroundWindow(handle);
 	}
-
 	return one && two;
 }
 

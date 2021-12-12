@@ -1,6 +1,4 @@
-﻿// if you're having issues with git, remember: commit all, then push, it works every time
-// TODO: make create ghost button create empty ghost
-#include <map>
+﻿#include <map>
 #include <fstream>
 #include <iostream>
 #include "buttonHover.h"
@@ -40,6 +38,7 @@ int LastTokenStateLevel;
 Player* lastPlayerState = nullptr;
 Player player(0,0);
 sf::RenderWindow window(sf::VideoMode(320, 320), "Filler");
+int mainMenu();
 bool isNumber(const string& str)
 {
     for (char const& c : str) {
@@ -139,6 +138,7 @@ int singlePlayerMain()
     resetB.text = "Reset";
     DIR* dir;
     struct dirent* ent;
+    levels = 0;
     if ((dir = opendir("./data/levels")) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             string name = string(ent->d_name);
@@ -359,19 +359,6 @@ int singlePlayerMain()
             Checkpoints[i].draw(&window);
         }
         for (int i = 0; i < ArrowShooters.size(); i++) {
-            /*if (ArrowShooters[i].type == 1)
-                if (ArrowShooters[i].arrow.x == player.x && ArrowShooters[i].arrow.y <= player.y && !(ArrowShooters[i].arrow.y <= player.y - 1))
-                    lost = true;
-            if (ArrowShooters[i].type == 2)
-                if (ArrowShooters[i].arrow.y == player.y && ArrowShooters[i].arrow.x >= player.x && !(ArrowShooters[i].arrow.x >= player.x + 1))
-                    lost = true;
-            if (ArrowShooters[i].type == 3)
-                if (ArrowShooters[i].arrow.x == player.x && ArrowShooters[i].arrow.y >= player.y && !(ArrowShooters[i].arrow.y >= player.y + 1))
-                    lost = true;
-            if (ArrowShooters[i].type == 0) {
-                if (ArrowShooters[i].arrow.y == player.y && ArrowShooters[i].arrow.x <= player.x && !(ArrowShooters[i].arrow.x <= player.x - 1))
-                    lost = true;
-            }*/
             sf::Texture cTex;
             cTex.loadFromFile("data/hmmm.png");
             sf::Sprite cSpr;
@@ -380,9 +367,6 @@ int singlePlayerMain()
             if (Collision::PixelPerfectTest(ArrowShooters[i].arrow.Sarrow, cSpr))
                 lost = true;
             ArrowShooters[i].draw(&window);
-            /*if (player.player.getGlobalBounds().contains(sf::Vector2f(ArrowShooters[i].arrow.x * 16, ArrowShooters[i].arrow.y * 16))) {
-                lost = true;
-            }*/
         }
         for (size_t i = 0; i < Checkpoints.size(); i++) {
             if (Checkpoints[i].x == player.x && Checkpoints[i].y == player.y) {
@@ -400,8 +384,6 @@ int singlePlayerMain()
             }
         }
         player.draw(&window);
-       // if (FillerUI::clicking && appInFocus(&window) && !lost && !won) // add this back for special win
-            //won = !won;
         if (won) {
             bool nextlevel = level + 1 <= levels;
             exitB.rect.setPosition(320 - 50 - exitB.sizeX, 200);
@@ -422,9 +404,10 @@ int singlePlayerMain()
 
             exitB.draw(&window);
             if (exitB.clicked(&window))
-                return 0;
+                mainMenu();
             if (nextLvlB.clicked(&window) && nextlevel) {
                 level++;
+                std::cout << "levels: " << levels << "\n";
                 std::cout << "data/levels/level" + to_string(level) + ".json" << std::endl;
                 tokens = {};
                 ArrowShooters = {};
@@ -439,10 +422,6 @@ int singlePlayerMain()
             for (int i = 0; i < ArrowShooters.size(); i++) {
                 ArrowShooters[i].stop = true;
             }
-            //float Width1 = 320;
-            //float Width2 = exitB.rect.getGlobalBounds().width;
-            //float X2 = exitB.rect.getPosition().x;
-            //exitB.rect.setPosition(((Width1 - Width2) / 2) , 200);
             exitB.draw(&window);
             retryB.draw(&window);
             float Width1 = 320;
@@ -451,7 +430,7 @@ int singlePlayerMain()
             resetB.rect.setPosition(((Width1 - Width2) / 2), 200);
             resetB.draw(&window);
             if (exitB.clicked(&window))
-                return 0;
+                mainMenu();
             if (retryB.clicked(&window)) {
                 if (level == LastTokenStateLevel) {
                     tokens = LastTokenState;
@@ -640,7 +619,7 @@ int ghostMain()
     endscreen.setPosition(0, -48);
     FillerUI::TextButton nextLvlB;
     nextLvlB.text = "Set Ghost";
-    nextLvlB.rect.setPosition(50, 200);
+    nextLvlB.rect.setPosition(16, 200);
     FillerUI::TextButton exitB;
     exitB.text = "Exit";
     exitB.rect.setPosition(320 - 16 - exitB.sizeX, 200);
@@ -651,6 +630,7 @@ int ghostMain()
     resetB.text = "Reset";
     DIR* dir;
     struct dirent* ent;
+    levels = 0;
     if ((dir = opendir("./data/levels")) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             string name = string(ent->d_name);
@@ -865,7 +845,7 @@ int ghostMain()
                         elegibleToMove = false;
                     }
                 }
-                if ((event.key.code == sf::Keyboard::E || event.key.code == sf::Keyboard::S || event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::W || event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::Right)){// && appInFocus(&window)) {
+                if ((event.key.code == sf::Keyboard::E || event.key.code == sf::Keyboard::S || event.key.code == sf::Keyboard::D || event.key.code == sf::Keyboard::W || event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::Right)){
                     std::cout << "event received" << std::endl;
                     GhostData newgd;
                     newgd.pPos.x = player.x;
@@ -929,13 +909,17 @@ int ghostMain()
         }
         player.draw(&window);
         if (won) {
-            bool nextlevel = level + 1 <= levels;
-            exitB.rect.setPosition(320 - 50 - exitB.sizeX, 200);
+            bool nextlevel = true;
+            float Width1 = 320;
+            float Width2 = resetB.rect.getGlobalBounds().width;
+            float X2 = resetB.rect.getPosition().x;
+            resetB.rect.setPosition(((Width1 - Width2) / 2), 200);
             for (int i = 0; i < ArrowShooters.size(); i++) {
                 ArrowShooters[i].stop = true;
             }
             if (nextlevel) {
                 nextLvlB.draw(&window);
+                resetB.draw(&window);
                 window.draw(winscreen);
             }
             else {
@@ -948,14 +932,28 @@ int ghostMain()
 
             exitB.draw(&window);
             if (exitB.clicked(&window))
-                return 0;
+                mainMenu();
             if (nextLvlB.clicked(&window) && nextlevel) {
                 saveGhostData(&savedata);
+            }
+            if (resetB.clicked(&window)) {
+                tokens = {};
+                ArrowShooters = {};
+                Checkpoints = {};
+                loadlevel("data/levels/level" + to_string(ghostLevel) + ".json");
+                for (int i = 0; i < gTokens.size(); i++) {
+                    gTokens[i].tokencolor = sf::Color::Yellow;
+                    gTokens[i].timestouched = 0;
+                }
+                ghostdata = reloadGhostData();
+                timer.reset();
+                lost = false;
+                lastPlayerState = nullptr;
+                LastTokenState = {};
             }
         }
         if (lost || ghostWon) {
             timer.pause();
-            exitB.rect.setPosition(320 - 16 - exitB.sizeX, 200);
             window.draw(losescreen);
             for (int i = 0; i < ArrowShooters.size(); i++) {
                 ArrowShooters[i].stop = true;
@@ -968,7 +966,7 @@ int ghostMain()
             resetB.rect.setPosition(((Width1 - Width2) / 2), 200);
             resetB.draw(&window);
             if (exitB.clicked(&window))
-                return 0;
+                mainMenu();
             if (retryB.clicked(&window)) {
                 bool touched = false;
                 for (int i = 0; i < Checkpoints.size(); i++) {
@@ -1030,7 +1028,7 @@ int ghostMain()
                 tokens = {};
                 ArrowShooters = {};
                 Checkpoints = {};
-                loadlevel("data/levels/level" + to_string(level) + ".json");
+                loadlevel("data/levels/level" + to_string(ghostLevel) + ".json");
                 for (int i = 0; i < gTokens.size(); i++) {
                     gTokens[i].tokencolor = sf::Color::Yellow;
                     gTokens[i].timestouched = 0;
@@ -1047,7 +1045,6 @@ int ghostMain()
         bool hit = false;
         ghostWon = true;
         for (int i = 0; i < ghostdata.size(); i++) {
-            //std::cout << i << ": pX: " << ghostdata[i].pPos.x << ", time: " << ghostdata[i].time << std::endl;
             if (timer.elapsedMilliseconds() >= ghostdata[i].time && timer.elapsedMilliseconds() <= ghostdata[i + (ghostdata.size() > i)].time && !won && !lost) {
                 hit = true;
                 ghostPlayer = Player(ghostdata[i].pPos.x + 320/16, ghostdata[i].pPos.y);
@@ -1093,13 +1090,11 @@ int ghostMain()
             gArrowShooters[i].draw(&window);
         }
         ghostPlayer.draw(&window);
-        //std::cout << timer.elapsedMilliseconds() << std::endl;
         FillerUI::SetClicking(false);
         window.display();
     }
     return 0;
 }
-int mainMenu();
 int ghostMenu();
 void eraseSubStr(std::string & mainStr, const std::string & toErase)
 {
@@ -1287,6 +1282,16 @@ int ghostMenu() {
     return 0;
 }
 int mainMenu() {
+    sf::View mainView({ 160.f, 160.f }, { 320.f, 320.f });
+    window.setSize({ 320, 320 });
+    window.setView(mainView);
+    tokens = {};
+    ArrowShooters = {};
+    Checkpoints = {};
+    lost = false;
+    won = false;
+    lastPlayerState = nullptr;
+    LastTokenState = {};
     sf::SoundBuffer hoverBuffer;
     hoverBuffer.loadFromMemory(buttonHover, buttonHover_length);
     sf::Sound hoverSound;
@@ -1362,5 +1367,6 @@ int mainMenu() {
 }
 int main() {
     mainMenu();
+    while (window.isOpen()) { ; }
     return 0;
 }
